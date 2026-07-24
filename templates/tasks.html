@@ -1,0 +1,366 @@
+{% extends "layout.html" %}
+
+{% block title %}Manajemen Tugas - Sistem Manajemen Tugas{% endblock %}
+
+{% block content %}
+<!-- halaman tugas - tambah, edit, dan hapus semuanya di sini dalam satu halaman -->
+
+<!-- judul halaman -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h2 class="fw-bold text-dark mb-1">
+            <i class="bi bi-list-task text-primary me-2"></i>Manajemen Tugas
+        </h2>
+        <p class="text-muted mb-0">Kelola semua tugas kuliah Anda di satu tempat</p>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    <!-- kolom kiri: form untuk tambah atau edit tugas -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+
+            <!-- header form berubah warna tergantung mode tambah/edit -->
+            <div class="card-header border-0 py-3
+                {{ 'bg-warning-subtle' if edit_task else 'bg-primary text-white' }}">
+                <h5 class="card-title fw-semibold mb-0">
+                    {% if edit_task %}
+                        <i class="bi bi-pencil-square me-2 text-warning"></i>
+                        <span class="text-dark">Edit Tugas</span>
+                    {% else %}
+                        <i class="bi bi-plus-circle me-2"></i>Tambah Tugas Baru
+                    {% endif %}
+                </h5>
+            </div>
+
+            <div class="card-body p-4">
+
+                <!-- action form berubah otomatis: add kalau mode tambah, update kalau mode edit -->
+                {% if edit_task %}
+                <!-- mode edit: kirim ke route update dengan id tugas -->
+                <form action="{{ url_for('update_task', task_id=edit_task.id) }}" method="POST" id="taskForm">
+                {% else %}
+                <!-- mode tambah: kirim ke route add -->
+                <form action="{{ url_for('add_task') }}" method="POST" id="taskForm">
+                {% endif %}
+
+                    <!-- input mata kuliah -->
+                    <div class="mb-3">
+                        <label for="mata_kuliah" class="form-label fw-semibold small">
+                            <i class="bi bi-book me-1 text-primary"></i>Mata Kuliah <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="mata_kuliah"
+                            name="mata_kuliah"
+                            placeholder="Contoh: Pemrograman Web"
+                            required
+                            value="{{ edit_task.mata_kuliah if edit_task else '' }}"
+                        >
+                    </div>
+
+                    <!-- input judul tugas -->
+                    <div class="mb-3">
+                        <label for="judul" class="form-label fw-semibold small">
+                            <i class="bi bi-card-heading me-1 text-primary"></i>Judul Tugas <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            class="form-control"
+                            id="judul"
+                            name="judul"
+                            placeholder="Contoh: UAS Pemrograman Web"
+                            required
+                            value="{{ edit_task.judul if edit_task else '' }}"
+                        >
+                    </div>
+
+                    <!-- textarea deskripsi, opsional -->
+                    <div class="mb-3">
+                        <label for="deskripsi" class="form-label fw-semibold small">
+                            <i class="bi bi-text-paragraph me-1 text-primary"></i>Deskripsi
+                        </label>
+                        <textarea
+                            class="form-control"
+                            id="deskripsi"
+                            name="deskripsi"
+                            rows="3"
+                            placeholder="Keterangan singkat tentang tugas ini..."
+                        >{{ edit_task.deskripsi if edit_task else '' }}</textarea>
+                    </div>
+
+                    <!-- input tanggal deadline -->
+                    <div class="mb-3">
+                        <label for="deadline" class="form-label fw-semibold small">
+                            <i class="bi bi-calendar3 me-1 text-primary"></i>Deadline <span class="text-danger">*</span>
+                        </label>
+                        <input
+                            type="date"
+                            class="form-control"
+                            id="deadline"
+                            name="deadline"
+                            required
+                            value="{{ edit_task.deadline.strftime('%Y-%m-%d') if edit_task else '' }}"
+                        >
+                    </div>
+
+                    <!-- pilihan prioritas -->
+                    <div class="mb-3">
+                        <label for="prioritas" class="form-label fw-semibold small">
+                            <i class="bi bi-flag me-1 text-primary"></i>Prioritas
+                        </label>
+                        <select class="form-select" id="prioritas" name="prioritas">
+                            <option value="Rendah"  {{ 'selected' if edit_task and edit_task.prioritas == 'Rendah'  }}>🟢 Rendah</option>
+                            <option value="Sedang"  {{ 'selected' if edit_task and edit_task.prioritas == 'Sedang'  }} {{ 'selected' if not edit_task }}>🟡 Sedang</option>
+                            <option value="Tinggi"  {{ 'selected' if edit_task and edit_task.prioritas == 'Tinggi'  }}>🔴 Tinggi</option>
+                        </select>
+                    </div>
+
+                    <!-- pilihan status -->
+                    <div class="mb-4">
+                        <label for="status" class="form-label fw-semibold small">
+                            <i class="bi bi-toggle-on me-1 text-primary"></i>Status
+                        </label>
+                        <select class="form-select" id="status" name="status">
+                            <option value="Belum Selesai" {{ 'selected' if edit_task and edit_task.status == 'Belum Selesai' }} {{ 'selected' if not edit_task }}>⏳ Belum Selesai</option>
+                            <option value="Selesai"       {{ 'selected' if edit_task and edit_task.status == 'Selesai' }}>✅ Selesai</option>
+                        </select>
+                    </div>
+
+                    <!-- tombol submit - beda antara mode tambah dan edit -->
+                    <div class="d-grid gap-2">
+                        {% if edit_task %}
+                        <!-- mode edit: ada tombol simpan dan batal -->
+                        <button type="submit" class="btn btn-warning fw-semibold">
+                            <i class="bi bi-save me-2"></i>Simpan Perubahan
+                        </button>
+                        <a href="{{ url_for('tasks') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle me-2"></i>Batal
+                        </a>
+                        {% else %}
+                        <!-- mode tambah: cukup satu tombol simpan -->
+                        <button type="submit" class="btn btn-primary fw-semibold">
+                            <i class="bi bi-plus-circle me-2"></i>Simpan Tugas
+                        </button>
+                        {% endif %}
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- kolom kanan: tabel semua tugas dengan fitur filter -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+
+            <!-- header tabel + dropdown filter status dan prioritas -->
+            <div class="card-header bg-white border-bottom py-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <h5 class="card-title fw-semibold mb-0">
+                        <i class="bi bi-table text-primary me-2"></i>Daftar Tugas
+                        <span class="badge bg-primary ms-1">{{ semua_tugas|length }}</span>
+                    </h5>
+
+                    <!-- form filter, auto-submit waktu dropdown berubah -->
+                    <form method="GET" action="{{ url_for('tasks') }}" class="d-flex gap-2 flex-wrap" id="filterForm">
+                        <select class="form-select form-select-sm" name="status" id="filterStatus"
+                                style="width: auto;" onchange="this.form.submit()">
+                            <option value="">Semua Status</option>
+                            <option value="Belum Selesai" {{ 'selected' if filter_status == 'Belum Selesai' }}>Belum Selesai</option>
+                            <option value="Selesai"       {{ 'selected' if filter_status == 'Selesai' }}>Selesai</option>
+                        </select>
+                        <select class="form-select form-select-sm" name="prioritas" id="filterPrioritas"
+                                style="width: auto;" onchange="this.form.submit()">
+                            <option value="">Semua Prioritas</option>
+                            <option value="Rendah" {{ 'selected' if filter_prioritas == 'Rendah' }}>Rendah</option>
+                            <option value="Sedang" {{ 'selected' if filter_prioritas == 'Sedang' }}>Sedang</option>
+                            <option value="Tinggi" {{ 'selected' if filter_prioritas == 'Tinggi' }}>Tinggi</option>
+                        </select>
+                        <!-- tombol reset filter, hanya muncul kalau ada filter aktif -->
+                        {% if filter_status or filter_prioritas %}
+                        <a href="{{ url_for('tasks') }}" class="btn btn-sm btn-outline-secondary" title="Reset Filter">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+
+            <!-- isi tabel tugas -->
+            <div class="card-body p-0">
+                {% if semua_tugas %}
+                <!-- tabel scrollable di layar kecil -->
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0" id="tabelTugas">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="px-4 py-3">#</th>
+                                <th class="py-3">Mata Kuliah / Judul</th>
+                                <th class="py-3">Deadline</th>
+                                <th class="py-3">Prioritas</th>
+                                <th class="py-3">Status</th>
+                                <th class="py-3 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for task in semua_tugas %}
+                            <!-- highlight baris yang sedang diedit dengan warna kuning -->
+                            <tr class="{{ 'table-warning' if edit_task and edit_task.id == task.id }}">
+
+                                <!-- nomor urut -->
+                                <td class="px-4 text-muted small">{{ loop.index }}</td>
+
+                                <!-- judul dan mata kuliah, plus potongan deskripsi kalau ada -->
+                                <td>
+                                    <p class="fw-semibold mb-0 text-dark">{{ task.judul }}</p>
+                                    <small class="text-muted">
+                                        <i class="bi bi-book me-1"></i>{{ task.mata_kuliah }}
+                                    </small>
+                                    {% if task.deskripsi %}
+                                    <br>
+                                    <small class="text-muted fst-italic" title="{{ task.deskripsi }}">
+                                        {{ task.deskripsi[:60] }}{% if task.deskripsi|length > 60 %}...{% endif %}
+                                    </small>
+                                    {% endif %}
+                                </td>
+
+                                <!-- tanggal deadline -->
+                                <td>
+                                    <span class="small">
+                                        <i class="bi bi-calendar3 me-1 text-muted"></i>
+                                        {{ task.deadline.strftime('%d %b %Y') }}
+                                    </span>
+                                </td>
+
+                                <!-- badge prioritas dengan warna berbeda -->
+                                <td>
+                                    {% if task.prioritas == 'Tinggi' %}
+                                        <span class="badge bg-danger rounded-pill">
+                                            <i class="bi bi-arrow-up me-1"></i>Tinggi
+                                        </span>
+                                    {% elif task.prioritas == 'Sedang' %}
+                                        <span class="badge bg-warning text-dark rounded-pill">
+                                            <i class="bi bi-dash me-1"></i>Sedang
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-success rounded-pill">
+                                            <i class="bi bi-arrow-down me-1"></i>Rendah
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- badge status selesai / belum -->
+                                <td>
+                                    {% if task.status == 'Selesai' %}
+                                        <span class="badge bg-success rounded-pill">
+                                            <i class="bi bi-check-circle me-1"></i>Selesai
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary rounded-pill">
+                                            <i class="bi bi-hourglass-split me-1"></i>Belum Selesai
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- tombol edit dan hapus per baris -->
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <!-- edit: bawa ke form di atas dengan data tugas ini -->
+                                        <a href="{{ url_for('edit_task', task_id=task.id) }}"
+                                           class="btn btn-sm btn-outline-warning"
+                                           title="Edit Tugas">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+
+                                        <!-- hapus: buka modal konfirmasi dulu sebelum eksekusi -->
+                                        <a href="{{ url_for('delete_task', task_id=task.id) }}"
+                                           class="btn btn-sm btn-outline-danger btn-hapus"
+                                           title="Hapus Tugas"
+                                           data-judul="{{ task.judul }}">
+                                            <i class="bi bi-trash3"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% else %}
+                <!-- kalau list tugas kosong (atau ga ada yang sesuai filter) -->
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted mb-3 d-block"></i>
+                    <h5 class="text-muted">Belum ada tugas</h5>
+                    <p class="text-muted small">
+                        {% if filter_status or filter_prioritas %}
+                            Tidak ada tugas yang sesuai filter. <a href="{{ url_for('tasks') }}">Reset filter</a>
+                        {% else %}
+                            Mulai tambahkan tugas Anda menggunakan form di sebelah kiri.
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- modal konfirmasi sebelum hapus - mencegah hapus tidak sengaja -->
+<div class="modal fade" id="modalHapus" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Konfirmasi Hapus
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4 text-center">
+                <p class="mb-1">Apakah Anda yakin ingin menghapus tugas:</p>
+                <p class="fw-bold text-dark" id="judulHapus">-</p>
+                <p class="text-muted small">Tindakan ini tidak dapat dibatalkan!</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i>Batal
+                </button>
+                <a href="#" class="btn btn-danger" id="btnKonfirmasiHapus">
+                    <i class="bi bi-trash3 me-1"></i>Ya, Hapus
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // tangkap semua klik tombol hapus, tampilkan modal konfirmasi dulu
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalHapus = new bootstrap.Modal(document.getElementById('modalHapus'));
+
+        document.querySelectorAll('.btn-hapus').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault(); // stop redirect langsung
+
+                const judul = this.getAttribute('data-judul');
+                const href  = this.getAttribute('href');
+
+                // isi nama tugas di dalam modal biar user tau yang mana yang mau dihapus
+                document.getElementById('judulHapus').textContent = '"' + judul + '"';
+                document.getElementById('btnKonfirmasiHapus').setAttribute('href', href);
+
+                // buka modal konfirmasi
+                modalHapus.show();
+            });
+        });
+    });
+</script>
+{% endblock %}
