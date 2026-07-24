@@ -4,10 +4,11 @@
 # setting koneksi ke MariaDB via XAMPP
 # kalau pakai hosting lain, sesuaikan host, user, dan passwordnya
 DB_CONFIG = {
-    'host': 'localhost',      # biasanya localhost kalau masih lokal
-    'user': 'root',           # default user XAMPP
-    'password': '',           # default XAMPP ga pakai password
-    'database': 'student_task_manager',  # nama database yang udah dibuat
+    'host': 'uowoto.h.filess.io',      
+    'user': 'students_task_manager_caveuseful',         
+    'password': '353cb13776b5e11871a13095c73b76a0e5fad8b2',        
+    'database': 'students_task_manager_caveuseful',
+    'port: '3307',
     'charset': 'utf8mb4'
 }
 
