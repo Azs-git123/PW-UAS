@@ -1,0 +1,137 @@
+{% extends "layout.html" %}
+
+{% block title %}Register - Sistem Manajemen Tugas{% endblock %}
+
+{% block content %}
+<!-- halaman register, layout sama seperti login -->
+<div class="auth-wrapper d-flex align-items-center justify-content-center min-vh-80">
+    <div class="auth-card card shadow border-0" style="max-width: 460px; width: 100%;">
+
+        <!-- bagian atas card - ikon dan judul -->
+        <div class="card-header bg-primary text-white text-center py-4 border-0">
+            <i class="bi bi-person-plus-fill display-4 mb-2 d-block"></i>
+            <h4 class="fw-bold mb-0">Buat Akun Baru</h4>
+            <p class="mb-0 opacity-75 small">Daftar dan mulai kelola tugas kuliahmu</p>
+        </div>
+
+        <!-- form register -->
+        <div class="card-body p-4">
+            <form action="{{ url_for('register') }}" method="POST" id="formRegister">
+
+                <!-- input nama lengkap -->
+                <div class="mb-3">
+                    <label for="nama" class="form-label fw-semibold">
+                        <i class="bi bi-person me-1 text-primary"></i>Nama Lengkap
+                    </label>
+                    <input
+                        type="text"
+                        class="form-control form-control-lg"
+                        id="nama"
+                        name="nama"
+                        placeholder="Masukkan nama lengkap"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <!-- input email -->
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-semibold">
+                        <i class="bi bi-envelope me-1 text-primary"></i>Email
+                    </label>
+                    <input
+                        type="email"
+                        class="form-control form-control-lg"
+                        id="email"
+                        name="email"
+                        placeholder="contoh@email.com"
+                        required
+                    >
+                </div>
+
+                <!-- input password dengan indikator kekuatan -->
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-semibold">
+                        <i class="bi bi-lock me-1 text-primary"></i>Password
+                    </label>
+                    <div class="input-group">
+                        <input
+                            type="password"
+                            class="form-control form-control-lg"
+                            id="password"
+                            name="password"
+                            placeholder="Minimal 6 karakter"
+                            required
+                            minlength="6"
+                        >
+                        <!-- tombol show/hide password -->
+                        <button class="btn btn-outline-secondary" type="button" id="btnTogglePassword"
+                                title="Tampilkan/Sembunyikan Password">
+                            <i class="bi bi-eye" id="iconPassword"></i>
+                        </button>
+                    </div>
+                    <!-- bar kecil di bawah untuk indikasi kekuatan password -->
+                    <div class="progress mt-2" style="height: 4px;" id="passwordStrengthBar">
+                        <div class="progress-bar" id="passwordProgress" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <small class="text-muted" id="passwordHint">Password minimal 6 karakter</small>
+                </div>
+
+                <!-- tombol daftar -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+                        <i class="bi bi-person-check me-2"></i>Daftar Sekarang
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- link balik ke login kalau sudah punya akun -->
+        <div class="card-footer text-center bg-light py-3 border-0">
+            <p class="mb-0 text-muted small">
+                Sudah punya akun?
+                <a href="{{ url_for('login') }}" class="text-primary fw-semibold text-decoration-none">
+                    Login di sini
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // toggle show/hide password
+    document.getElementById('btnTogglePassword').addEventListener('click', function () {
+        const passInput = document.getElementById('password');
+        const icon      = document.getElementById('iconPassword');
+
+        if (passInput.type === 'password') {
+            passInput.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            passInput.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    });
+
+    // indikator kekuatan password - berubah warna sesuai panjang karakter
+    document.getElementById('password').addEventListener('input', function () {
+        const val      = this.value;
+        const bar      = document.getElementById('passwordProgress');
+        const hint     = document.getElementById('passwordHint');
+        let strength   = 0;
+        let color      = 'bg-danger';
+        let hintText   = 'Terlalu lemah';
+
+        if (val.length >= 6)  { strength = 33; color = 'bg-warning'; hintText = 'Cukup'; }
+        if (val.length >= 10) { strength = 66; color = 'bg-info';    hintText = 'Baik'; }
+        if (val.length >= 14) { strength = 100; color = 'bg-success'; hintText = 'Kuat!'; }
+        if (val.length === 0) { strength = 0;   color = '';           hintText = 'Password minimal 6 karakter'; }
+
+        bar.style.width    = strength + '%';
+        bar.className      = 'progress-bar ' + color;
+        hint.textContent   = hintText;
+    });
+</script>
+{% endblock %}

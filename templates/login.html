@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+
+{% block title %}Login - Sistem Manajemen Tugas{% endblock %}
+
+{% block content %}
+<!-- halaman login, ditaruh di tengah halaman pakai flex -->
+<div class="auth-wrapper d-flex align-items-center justify-content-center min-vh-80">
+    <div class="auth-card card shadow border-0" style="max-width: 430px; width: 100%;">
+
+        <!-- bagian atas card - judul dan ikon -->
+        <div class="card-header bg-primary text-white text-center py-4 border-0">
+            <i class="bi bi-journal-check display-4 mb-2 d-block"></i>
+            <h4 class="fw-bold mb-0">Selamat Datang!</h4>
+            <p class="mb-0 opacity-75 small">Masuk ke akun Anda untuk melanjutkan</p>
+        </div>
+
+        <!-- form login -->
+        <div class="card-body p-4">
+            <form action="{{ url_for('login') }}" method="POST" id="formLogin">
+
+                <!-- input email -->
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-semibold">
+                        <i class="bi bi-envelope me-1 text-primary"></i>Email
+                    </label>
+                    <input
+                        type="email"
+                        class="form-control form-control-lg"
+                        id="email"
+                        name="email"
+                        placeholder="contoh@email.com"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <!-- input password dengan tombol show/hide -->
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-semibold">
+                        <i class="bi bi-lock me-1 text-primary"></i>Password
+                    </label>
+                    <div class="input-group">
+                        <input
+                            type="password"
+                            class="form-control form-control-lg"
+                            id="password"
+                            name="password"
+                            placeholder="Masukkan password"
+                            required
+                        >
+                        <!-- tombol mata untuk tampilkan/sembunyikan password -->
+                        <button class="btn btn-outline-secondary" type="button" id="btnTogglePassword"
+                                title="Tampilkan/Sembunyikan Password">
+                            <i class="bi bi-eye" id="iconPassword"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- tombol submit login -->
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg fw-semibold">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- link ke halaman register kalau belum punya akun -->
+        <div class="card-footer text-center bg-light py-3 border-0">
+            <p class="mb-0 text-muted small">
+                Belum punya akun?
+                <a href="{{ url_for('register') }}" class="text-primary fw-semibold text-decoration-none">
+                    Daftar sekarang
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // toggle show/hide password waktu klik ikon mata
+    document.getElementById('btnTogglePassword').addEventListener('click', function () {
+        const passInput = document.getElementById('password');
+        const icon      = document.getElementById('iconPassword');
+
+        if (passInput.type === 'password') {
+            passInput.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            passInput.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    });
+</script>
+{% endblock %}

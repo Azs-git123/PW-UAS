@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistem Manajemen Tugas Mahasiswa - Kelola tugas kuliah dengan mudah">
+    <title>{% block title %}Sistem Manajemen Tugas Mahasiswa{% endblock %}</title>
+
+    <!-- Bootstrap 5 dari CDN, ga perlu install -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+    <!-- ikon Bootstrap, banyak dipake di seluruh halaman -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- font Inter dari Google Fonts, lebih clean dari default -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- css custom kita sendiri -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- navbar atas - sticky biar tetap keliatan waktu scroll -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid px-4">
+
+            <!-- logo / nama aplikasi -->
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="{{ url_for('index') }}">
+                <i class="bi bi-journal-check fs-4"></i>
+                <span>TaskMahasiswa</span>
+            </a>
+
+            <!-- tombol hamburger yang muncul di layar kecil -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- menu navigasi, berubah tergantung status login -->
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if session.get('user_id') %}
+                <!-- menu ini muncul kalau user sudah login -->
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'dashboard' }}" href="{{ url_for('dashboard') }}">
+                            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'tasks' or request.endpoint == 'edit_task' }}" href="{{ url_for('tasks') }}">
+                            <i class="bi bi-list-task me-1"></i>Tugas Saya
+                        </a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- nama user yang lagi login -->
+                            <span class="navbar-text text-white-50 d-none d-lg-block">
+                                <i class="bi bi-person-circle me-1"></i>{{ session.get('user_nama', '') }}
+                            </span>
+                            <!-- tombol logout -->
+                            <a class="btn btn-outline-light btn-sm" href="{{ url_for('logout') }}">
+                                <i class="bi bi-box-arrow-right me-1"></i>Logout
+                            </a>
+                        </div>
+                    </li>
+                </ul>
+                {% else %}
+                <!-- kalau belum login, tampilkan link login dan register -->
+                <ul class="navbar-nav ms-auto gap-2">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'login' }}" href="{{ url_for('login') }}">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-light btn-sm" href="{{ url_for('register') }}">
+                            <i class="bi bi-person-plus me-1"></i>Register
+                        </a>
+                    </li>
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- wrapper utama - pakai flex layout kalau user sudah login (ada sidebar) -->
+    <div class="{% if session.get('user_id') %}layout-wrapper{% endif %}">
+
+        {% if session.get('user_id') %}
+        <!-- sidebar kiri, hanya muncul saat login, disembunyikan di mobile -->
+        <aside class="sidebar bg-white shadow-sm">
+            <div class="sidebar-inner">
+                <!-- info singkat user di atas sidebar -->
+                <div class="sidebar-user text-center py-4 px-3 border-bottom">
+                    <div class="avatar-circle mx-auto mb-2">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <p class="fw-semibold mb-0 text-dark">{{ session.get('user_nama', '') }}</p>
+                    <small class="text-muted">{{ session.get('user_email', '') }}</small>
+                </div>
+
+                <!-- link navigasi di sidebar -->
+                <nav class="sidebar-nav py-3">
+                    <a href="{{ url_for('dashboard') }}"
+                       class="sidebar-link {{ 'active' if request.endpoint == 'dashboard' }}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('tasks') }}"
+                       class="sidebar-link {{ 'active' if request.endpoint == 'tasks' or request.endpoint == 'edit_task' }}">
+                        <i class="bi bi-list-task"></i>
+                        <span>Manajemen Tugas</span>
+                    </a>
+                    <hr class="mx-3">
+                    <a href="{{ url_for('logout') }}" class="sidebar-link text-danger">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
+                    </a>
+                </nav>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- area konten halaman, child template akan mengisi bagian ini -->
+        <main class="main-content">
+            <div class="container-fluid p-4">
+
+                <!-- flash message dari Flask, ditampilkan di sini -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show shadow-sm" role="alert">
+                            {% if category == 'success' %}<i class="bi bi-check-circle-fill me-2"></i>
+                            {% elif category == 'danger' %}<i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            {% elif category == 'warning' %}<i class="bi bi-exclamation-circle-fill me-2"></i>
+                            {% elif category == 'info' %}<i class="bi bi-info-circle-fill me-2"></i>
+                            {% endif %}
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- konten spesifik tiap halaman dirender di sini -->
+                {% block content %}{% endblock %}
+
+            </div>
+        </main>
+
+    </div>
+
+    <!-- footer -->
+    <footer class="footer-bar text-center text-muted py-3 mt-auto border-top bg-white">
+        <small>
+            <i class="bi bi-journal-check text-primary me-1"></i>
+            Sistem Manajemen Tugas Mahasiswa &copy; 2024 &mdash; Dibuat dengan Flask &amp; Bootstrap 5
+        </small>
+    </footer>
+
+    <!-- Bootstrap JS bundle (sudah include Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- script custom kita -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    <!-- kalau ada halaman yang butuh script tambahan, diisi di sini -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>
